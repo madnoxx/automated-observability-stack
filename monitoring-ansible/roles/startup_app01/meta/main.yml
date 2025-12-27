@@ -1,0 +1,24 @@
+galaxy_info:
+  author: dmitry
+  role_name: startup_app01
+  description: Installs Grafana Alloy, Docker, and HotROD application.
+
+  license: MIT
+
+  min_ansible_version: "2.16"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+
+  galaxy_tags:
+    - monitoring
+    - alloy
+    - otel
+    - docker
+    - hotrod
+    - prometheus
+
+dependencies: []

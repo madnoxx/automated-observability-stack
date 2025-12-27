@@ -1,0 +1,7 @@
+- name: Prepare instance for role execution
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Install Python and sudo
+      ansible.builtin.raw: apt update && apt install -y python3 sudo
+      changed_when: false

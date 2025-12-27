@@ -1,0 +1,14 @@
+- name: 01 - Setup Monitoring Server (mon01)
+  hosts: monitoring_server
+  roles:
+    - startup_mon01
+
+- name: 02 - Setup Prometheus Server (prom01)
+  hosts: prometheus_server
+  roles:
+    - startup_prom01
+
+- name: 03 - Setup Application Server (app01)
+  hosts: app_servers
+  roles:
+    - startup_app01

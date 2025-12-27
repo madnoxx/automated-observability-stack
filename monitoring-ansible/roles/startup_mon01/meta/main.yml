@@ -1,0 +1,26 @@
+galaxy_info:
+  author: dmitry
+  role_name: startup_mon01
+  description: Installs and configures Grafana, Loki and Tempo.
+
+  license: MIT
+
+  min_ansible_version: "2.16"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+
+  galaxy_tags:
+    - monitoring
+    - observability
+    - grafana
+    - loki
+    - tempo
+    - metrics
+    - logs
+    - traces
+
+dependencies: []

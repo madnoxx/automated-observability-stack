@@ -1,0 +1,12 @@
+mon_ip: "127.0.0.1"
+prom_ip: "127.0.0.1"
+app_ip: "127.0.0.1"
+
+prom_version: "3.8.0"
+loki_version: "3.6.2"
+tempo_version: "2.9.0"
+
+grafana_port: 3000
+loki_port: 3100
+tempo_port: 3200
+prom_port: 9090

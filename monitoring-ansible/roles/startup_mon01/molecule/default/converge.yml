@@ -1,0 +1,8 @@
+---
+- name: Converge
+  hosts: all
+  become: yes
+  vars_files:
+    - /vagrant/monitoring-ansible/group_vars/all.yml
+  roles:
+    - /vagrant/monitoring-ansible/roles/startup_mon01

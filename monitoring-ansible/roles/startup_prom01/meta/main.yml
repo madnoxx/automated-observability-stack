@@ -1,0 +1,22 @@
+galaxy_info:
+  author: dmitry
+  role_name: startup_prom01
+  description: Installs Prometheus with Remote Write enabled and alerting rules.
+
+  license: MIT
+
+  min_ansible_version: "2.16"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+
+  galaxy_tags:
+    - monitoring
+    - prometheus
+    - alerting
+    - metrics
+
+dependencies: []

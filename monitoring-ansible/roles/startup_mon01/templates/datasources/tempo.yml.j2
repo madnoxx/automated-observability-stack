@@ -1,0 +1,21 @@
+apiVersion: 1
+datasources:
+  - name: Tempo
+    type: tempo
+    uid: tempo-ds
+    url: http://localhost:{{ tempo_port }}
+    access: proxy
+    version: 1
+    jsonData:
+      tracesToLogs:
+        datasourceUid: loki-ds
+        tags: ["trace_id", "span_id"]
+        
+        filterByTraceID: true
+        filterBySpanID: true
+
+        spanStartTimeShift: '-10s' 
+        spanEndTimeShift: '20s'
+
+        spanTags:
+          - key: 'trace_id'

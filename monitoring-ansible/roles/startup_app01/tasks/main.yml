@@ -1,0 +1,119 @@
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - nginx
+      - wget
+      - curl
+      - unzip
+      - acl
+      - python3-pip
+      - python3-setuptools
+    state: present
+    update_cache: yes
+
+- name: Start and enable Docker
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Ensure Python Docker SDK is installed
+  ansible.builtin.pip:
+    name: docker
+    executable: pip3
+
+- name: Add 'vagrant' user to 'docker' group
+  ansible.builtin.user:
+    name: vagrant
+    groups: docker
+    append: yes
+
+- name: Install Grafana Alloy
+  ansible.builtin.include_tasks: install_alloy.yml
+
+- name: Add 'alloy' user to 'docker' group
+  ansible.builtin.user:
+    name: alloy
+    groups: docker
+    append: yes
+
+- name: Prepare Docker log ACLs for Alloy
+  block:
+
+    - name: Allow alloy to traverse /var/lib/docker
+      ansible.posix.acl:
+        path: /var/lib/docker
+        entity: alloy
+        etype: user
+        permissions: rx
+        state: present
+
+    - name: Allow alloy to traverse container directories
+      ansible.posix.acl:
+        path: /var/lib/docker/containers
+        entity: alloy
+        etype: user
+        permissions: rx
+        state: present
+
+    - name: Set default ACL so future container logs are readable by alloy
+      ansible.builtin.command: >
+        setfacl -m d:u:alloy:r /var/lib/docker/containers
+      changed_when: false
+
+- name: Remove default Nginx site link
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Restart Nginx
+
+- name: Configure Nginx Reverse Proxy
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/sites-available/default
+  notify: Restart Nginx
+
+- name: Enable Nginx site by creating symlink
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/default
+    dest: /etc/nginx/sites-enabled/default
+    state: link
+    force: yes
+  notify: Restart Nginx
+
+- name: Validate nginx config
+  ansible.builtin.command: nginx -t
+  changed_when: false
+
+- name: Ensure Nginx is enabled and running
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: yes
+
+- name: Run Jaeger HotROD container
+  community.docker.docker_container:
+    name: hotrod
+    image: jaegertracing/example-hotrod:latest
+    ports:
+      - "8080:8080"
+    env:
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://172.17.0.1:4318"
+    state: started
+    restart_policy: always
+
+- name: Configure Alloy
+  ansible.builtin.template:
+    src: alloy.config.j2
+    dest: /etc/alloy/config.alloy
+    owner: alloy
+    group: alloy
+    mode: '0644'
+  notify: Restart Alloy
+
+- name: Ensure Alloy is enabled and running
+  ansible.builtin.service:
+    name: alloy
+    state: started
+    enabled: yes

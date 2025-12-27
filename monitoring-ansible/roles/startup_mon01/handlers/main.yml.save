@@ -1,0 +1,31 @@
+- name: Daemon Reload
+  ansible.builtin.systemd:
+    daemon_reload: true
+  when:
+    - ansible_facts['proc_cmdline'] is defined
+    - "'systemd' in ansible_facts['proc_cmdline']"
+
+- name: Restart Grafana
+  ansible.builtin.service:
+    name: grafana-server
+    state: restarted
+  when:
+       - ansible_facts['proc_cmdline'] is defined
+    - "'systemd' in ansible_facts['proc_cmdline']"
+
+
+- name: Restart Loki
+  ansible.builtin.service:
+    name: loki
+    state: restarted
+  when:
+    - ansible_service_mgr == "systemd"
+    - not molecule_skip_systemd | default(false)
+
+- name: Restart Tempo
+  ansible.builtin.service:
+    name: tempo
+    state: restarted
+  when:
+    - ansible_service_mgr == "systemd"
+    - not molecule_skip_systemd | default(false)

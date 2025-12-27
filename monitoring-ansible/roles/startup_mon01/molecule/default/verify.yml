@@ -1,0 +1,45 @@
+- name: Verify Monitoring Stack Installation
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Wait for Loki to be ready
+      ansible.builtin.wait_for:
+        port: 3100
+        host: localhost
+        delay: 5
+        timeout: 60
+
+    - name: Check Loki HTTP endpoint (Port 3100)
+      ansible.builtin.uri:
+        url: http://localhost:3100/ready
+        status_code: 200
+        timeout: 5
+      retries: 10
+      delay: 3
+      register: result
+      until: result.status == 200
+
+    - name: Wait for Grafana to be ready
+      ansible.builtin.wait_for:
+        port: 3000
+        host: localhost
+        delay: 10
+        timeout: 120
+
+    - name: Check Grafana HTTP endpoint (Port 3000)
+      ansible.builtin.uri:
+        url: http://localhost:3000/login
+        status_code: 200
+        timeout: 5
+
+    - name: Wait for Tempo to be ready
+      ansible.builtin.wait_for:
+        port: 3200
+        host: localhost
+        delay: 5
+        timeout: 60
+
+    - name: Check Tempo HTTP endpoint
+      ansible.builtin.uri:
+        url: http://localhost:3200/status
+        status_code: 200

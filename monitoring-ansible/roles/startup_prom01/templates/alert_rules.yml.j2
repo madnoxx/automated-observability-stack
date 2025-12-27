@@ -1,0 +1,31 @@
+{% raw %}
+groups:
+- name: InfrastructureAlerts
+  rules:
+  - alert: InstanceDown
+    expr: up{job=~"integrations/.*"} == 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: Инстанс недоступен {{ $labels.instance }}
+      description: "{{ $labels.instance }} не отвечает на запросы Alloy (Down)"
+
+  - alert: HighCPULoad
+    expr: node_load5{job="integrations/unix"} > count by (instance) (node_cpu_seconds_total{job="integrations/unix"})
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: Высокая нагрузка CPU на {{ $labels.instance }}
+      description: "Средняя нагрузка за 5 минут: {{ $value }}"
+
+  - alert: LowDiskSpace
+    expr: node_filesystem_free_bytes{job="integrations/unix", mountpoint="/"} / node_filesystem_size_bytes{job="integrations/unix", mountpoint="/"} * 100 < 10
+    for: 10m
+    labels:
+      severity: critical
+    annotations:
+      summary: Мало места на диске {{ $labels.instance }}
+      description: "Осталось меньше 10% места на /"
+{% endraw %}

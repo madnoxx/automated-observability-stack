@@ -1,0 +1,214 @@
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - wget
+      - unzip
+      - curl
+      - apt-transport-https
+      - software-properties-common
+      - gnupg
+    state: present
+    update_cache: yes
+
+- name: Add Grafana GPG key
+  ansible.builtin.apt_key:
+    url: https://apt.grafana.com/gpg.key
+    state: present
+
+- name: Add Grafana repository
+  ansible.builtin.apt_repository:
+    repo: "deb https://apt.grafana.com stable main"
+    state: present
+    update_cache: yes
+
+- name: Install Grafana
+  ansible.builtin.apt:
+    name: grafana
+    state: present
+
+- name: Download Loki archive
+  ansible.builtin.get_url:
+    url: "https://github.com/grafana/loki/releases/download/v{{ loki_version }}/loki-linux-amd64.zip"
+    dest: /tmp/loki-linux-amd64.zip
+    mode: '0644'
+
+- name: Unpack Loki
+  ansible.builtin.unarchive:
+    src: /tmp/loki-linux-amd64.zip
+    dest: /tmp/
+    remote_src: yes
+    creates: /tmp/loki-linux-amd64
+
+- name: Install Loki binary
+  ansible.builtin.copy:
+    src: /tmp/loki-linux-amd64
+    dest: /usr/local/bin/loki
+    owner: root
+    group: root
+    mode: '0755'
+    remote_src: yes
+
+- name: Download Tempo archive
+  ansible.builtin.get_url:
+    url: "https://github.com/grafana/tempo/releases/download/v{{ tempo_version }}/tempo_{{ tempo_version }}_linux_amd64.tar.gz"
+    dest: /tmp/tempo.tar.gz
+    mode: '0644'
+    force: no
+
+- name: Unpack Tempo
+  ansible.builtin.unarchive:
+    src: /tmp/tempo.tar.gz
+    dest: /tmp/
+    remote_src: yes
+    creates: /tmp/tempo
+
+- name: Install Tempo binary
+  ansible.builtin.copy:
+    src: /tmp/tempo
+    dest: /usr/local/bin/tempo
+    owner: root
+    group: root
+    mode: '0755'
+    remote_src: yes
+
+- name: Ensure Loki config directory exists
+  ansible.builtin.file:
+    path: /etc/loki
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Configure Loki
+  ansible.builtin.template:
+    src: loki.yaml.j2
+    dest: /etc/loki/config.yaml
+  notify: Restart Loki
+
+- name: Ensure Tempo config directory exists
+  ansible.builtin.file:
+    path: /etc/tempo
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Configure Tempo
+  ansible.builtin.template:
+    src: tempo.yaml.j2
+    dest: /etc/tempo/config.yaml
+  notify: Restart Tempo
+
+- name: Copy Loki and Tempo Systemd services
+  ansible.builtin.template:
+    src: "{{ item }}.service.j2"
+    dest: "/etc/systemd/system/{{ item }}.service"
+  loop:
+    - loki
+    - tempo
+  notify:
+    - Restart {{ item | capitalize }}
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: yes
+  when: ansible_service_mgr == "systemd"
+
+- name: Create Grafana provisioning directories
+  ansible.builtin.file:
+    path: "/etc/grafana/provisioning/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - datasources
+    - dashboards
+
+- name: Copy Grafana Data Sources configuration
+  ansible.builtin.template:
+    src: "datasources/{{ item }}.yml.j2"
+    dest: "/etc/grafana/provisioning/datasources/{{ item }}.yml"
+  loop:
+    - prometheus
+    - loki
+    - tempo
+  notify: Restart Grafana
+
+- name: Create Grafana dashboards directory
+  ansible.builtin.file:
+    path: /var/lib/grafana/dashboards
+    state: directory
+    owner: grafana
+    group: grafana
+    mode: '0755'
+
+- name: Copy dashboards configuration file
+  ansible.builtin.template:
+    src: dashboards/dashboards.yml.j2
+    dest: /etc/grafana/provisioning/dashboards/dashboards.yml
+  notify: Restart Grafana
+
+- name: Copy Node Exporter dashboard JSON
+  ansible.builtin.copy:
+    src: dashboards/node_exporter.json
+    dest: /var/lib/grafana/dashboards/node_exporter.json
+    owner: grafana
+    group: grafana
+    mode: '0644'
+
+- name: Ensure services are running
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  loop:
+    - grafana-server
+    - loki
+    - tempo
+  when: ansible_service_mgr == "systemd"
+
+- name: Start Loki manually
+  ansible.builtin.shell: |
+    nohup /usr/local/bin/loki -config.file /etc/loki/config.yaml > /var/log/loki.log 2>&1 &
+    sleep 3
+  async: 10
+  poll: 0
+  changed_when: false
+  when: ansible_service_mgr != "systemd"
+
+- name: Start Tempo manually
+  ansible.builtin.shell: |
+    nohup /usr/local/bin/tempo -config.file /etc/tempo/config.yaml > /var/log/tempo.log 2>&1 &
+    sleep 3
+  async: 10
+  poll: 0
+  changed_when: false
+  when: ansible_service_mgr != "systemd"
+
+- name: Create Grafana startup script
+  ansible.builtin.copy:
+    dest: /usr/local/bin/start-grafana.sh
+    mode: '0755'
+    content: |
+      #!/bin/bash
+      if ! pgrep -f grafana-server > /dev/null; then
+        cd /usr/share/grafana
+        su -s /bin/bash grafana -c "exec /usr/sbin/grafana-server \
+          --homepath=/usr/share/grafana \
+          --config=/etc/grafana/grafana.ini \
+          cfg:default.paths.logs=/var/log/grafana \
+          cfg:default.paths.data=/var/lib/grafana \
+          cfg:default.paths.plugins=/var/lib/grafana/plugins \
+          >> /var/log/grafana/grafana.log 2>&1" &
+        disown
+      fi
+  when: ansible_service_mgr != "systemd"
+
+- name: Start Grafana via script
+  ansible.builtin.command: /usr/local/bin/start-grafana.sh
+  changed_when: false
+  when: ansible_service_mgr != "systemd"
+
+- name: Wait for Grafana to start
+  ansible.builtin.pause:
+    seconds: 15
+  when: ansible_service_mgr != "systemd"
