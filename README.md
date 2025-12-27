@@ -62,11 +62,11 @@ ansible-playbook -i hosts.ini playbook.yml
 ## Шаг 4: Проверка
 После завершения плейбука откройте Grafana в браузере:
 
-URL: http://localhost:3000
+- URL: http://localhost:3000
 
-Login: admin
+- Login: admin
 
-Password: admin
+- Password: admin
 
 ### Тестирование (Molecule)
 
@@ -81,12 +81,12 @@ molecule test
 Тесты поднимают Docker-контейнер, разворачивают роль и проверяют доступность HTTP API сервисов.
 
 ### Стек технологий
-IaC: Ansible (Roles, Jinja2 Templates), Vagrant.
+- IaC: Ansible (Roles, Jinja2 Templates), Vagrant.
 
-Monitoring: Grafana, Prometheus (Alerting Rules), Loki, Tempo.
+- Monitoring: Grafana, Prometheus (Alerting Rules), Loki, Tempo.
 
-Agent: Grafana Alloy (OpenTelemetry Collector).
+- Agent: Grafana Alloy (OpenTelemetry Collector).
 
-App: Jaeger HotROD (Go microservices).
+- App: Jaeger HotROD (Go microservices).
 
-Testing: Molecule, Docker.
+- Testing: Molecule, Docker.
