@@ -41,32 +41,42 @@
 
 Для запуска вам понадобятся **VirtualBox** и **Vagrant**.
 
-### Шаг 1: Поднятие инфраструктуры
+### 1. Поднятие инфраструктуры
 ```bash
 vagrant up
 ```
 Vagrant создаст 4 виртуальные машины и настроит сеть.
 
-### Шаг 2: Подключение к управляющему узлу
+### 2. Подключение к управляющему узлу
 ```bash
 vagrant ssh ansible01
 ```
 
-### Шаг 3: Запуск автоматизации (Ansible)
+### 3. Запуск автоматизации (Ansible)
 Внутри машины ansible01:
 ```bash
 cd /vagrant/monitoring-ansible
 ansible-playbook -i hosts.ini playbook.yml
 ```
 
-## Шаг 4: Проверка
-После завершения плейбука откройте Grafana в браузере:
+## 4. Доступ к сервисам
+После успешного развертывания будут доступны следующие интерфейсы:
 
-- URL: http://localhost:3000
+| Сервис | URL | Credentials | Описание |
+|--------|-----|-------------|----------|
+| **Grafana** | http://localhost:3000 | `admin` / `admin` | Визуализация и дашборды |
+| **Prometheus** | http://localhost:9090 | - | Web UI метрик |
+| **HotROD App** | http://localhost:8080 | - | Демо-приложение |
+| **Loki API** | http://localhost:3100/ready | - | Проверка готовности |
+| **Tempo API** | http://localhost:3200/status | - | Проверка статуса |
 
-- Login: admin
-
-- Password: admin
+### Проверка работоспособности
+```bash
+curl -s http://localhost:3100/ready && echo "✓ Loki OK"
+curl -s http://localhost:3200/status && echo "✓ Tempo OK"
+curl -s http://localhost:9090/-/healthy && echo "✓ Prometheus OK"
+curl -s http://localhost:3000/api/health && echo "✓ Grafana OK"
+```
 
 ### Тестирование (Molecule)
 
