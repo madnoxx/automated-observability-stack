@@ -84,6 +84,7 @@ curl -s http://localhost:3000/api/health && echo "Grafana OK"
 
 Внутри ansible01:
 ```bash
+source ~/ansible_venv_py310/bin/activate
 cd /vagrant/monitoring-ansible/roles/startup_mon01
 molecule test
 ```
