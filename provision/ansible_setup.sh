@@ -1,62 +1,55 @@
 #!/bin/bash
 set -e
 
-sudo apt update
-sudo apt install -y \
-  build-essential \
-  libssl-dev \
-  zlib1g-dev \
-  libbz2-dev \
-  libreadline-dev \
-  libsqlite3-dev \
-  libffi-dev \
-  libncursesw5-dev \
-  xz-utils \
-  tk-dev \
-  libxml2-dev \
-  libxmlsec1-dev \
-  liblzma-dev \
-  curl \
+apt update
+apt install -y \
+  python3 \
+  python3-venv \
+  python3-pip \
   git \
+  curl \
+  unzip \
   ca-certificates \
   software-properties-common \
-  python3-venv \
-  docker.io
 
-sudo usermod -aG docker $USER
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
+systemctl enable docker
+systemctl start docker
 
-PYTHON_VERSION=3.10.14
+usermod -aG docker vagrant 
 
-cd /usr/src
-sudo curl -O https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz
-sudo tar xzf Python-${PYTHON_VERSION}.tgz
-cd Python-${PYTHON_VERSION}
+sudo -u vagrant -i bash << 'EOF'
+    python3 -m venv ~/ansible_venv
+    
+    source ~/ansible_venv/bin/activate
+    
+    pip install --upgrade pip setuptools wheel
+    
+    pip install --upgrade \
+      ansible-core \
+      molecule \
+      molecule-docker \
+      ansible-compat \
+      docker # Python SDK для Docker тоже нужен!
 
-sudo ./configure --enable-optimizations
-sudo make -j"$(nproc)"
-sudo make altinstall
+    ansible-galaxy collection install community.docker ansible.posix
+    
+    if ! grep -q "ansible_venv" ~/.bashrc; then
+        echo "source ~/ansible_venv/bin/activate" >> ~/.bashrc
+    fi
 
-cd ~
-/usr/local/bin/python3.10 -m venv ansible_venv_py310
+    mkdir -p /home/vagrant/.ssh
+    chmod 700 /home/vagrant/.ssh
 
-sudo chown -R vagrant:vagrant /home/vagrant/ansible_venv_py310
+    if ls /vagrant/monitoring-ansible/id_rsa_* 1> /dev/null 2>&1; then
+        cp /vagrant/monitoring-ansible/id_rsa_* ~/.ssh/
+        chmod 600 ~/.ssh/id_rsa_*
+        echo "SSH keys copied successfully."
+    else
+        echo "WARNING: No SSH keys found in /vagrant/monitoring-ansible/"
+    fi
 
-source ~/ansible_venv_py310/bin/activate
-
-pip install --upgrade pip setuptools wheel
-
-pip install --upgrade \
-  ansible-core \
-  ansible \
-  molecule \
-  molecule-docker \
-  ansible-compat
-
-ansible-galaxy collection install \
-  community.docker \
-  ansible.posix
-
-ansible --version
-molecule --version
-docker --version
-python --version
+    echo "StrictHostKeyChecking no" >> /home/vagrant/.ssh/config
+    chmod 600 /home/vagrant/.ssh/config
+EOF

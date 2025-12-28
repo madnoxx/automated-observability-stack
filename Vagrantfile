@@ -38,6 +38,7 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.define "ansible01" do |ansible|
+    ansible.vm.box = "ubuntu/jammy64" 
     ansible.vm.hostname = "ansible01"
     ansible.vm.network "private_network", ip: "192.168.56.10" 
     ansible.vm.network "forwarded_port", guest: 22, host: 2210 
