@@ -66,14 +66,10 @@ ansible-playbook -i hosts.ini playbook.yml
 |--------|-----|-------------|----------|
 | **Grafana** | http://localhost:3000 | `admin` / `admin` | Визуализация и дашборды |
 | **Prometheus** | http://localhost:9090 | - | Web UI метрик |
-| **HotROD App** | http://localhost:8080 | - | Демо-приложение |
-| **Loki API** | http://localhost:3100/ready | - | Проверка готовности |
-| **Tempo API** | http://localhost:3200/status | - | Проверка статуса |
+| **HotROD App** | http://localhost:8081 | - | Демо-приложение |
 
 #### Проверка работоспособности:
 ```bash
-curl -s http://localhost:3100/ready && echo "Loki OK"
-curl -s http://localhost:3200/status && echo "Tempo OK"
 curl -s http://localhost:9090/-/healthy && echo "Prometheus OK"
 curl -s http://localhost:3000/api/health && echo "Grafana OK"
 ```
@@ -84,7 +80,6 @@ curl -s http://localhost:3000/api/health && echo "Grafana OK"
 
 Внутри ansible01:
 ```bash
-source ~/ansible_venv_py310/bin/activate
 cd /vagrant/monitoring-ansible/roles/startup_mon01
 molecule test
 ```
