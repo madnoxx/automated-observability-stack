@@ -72,7 +72,7 @@ ansible-playbook -i hosts.ini playbook.yml
 
 Откройте `Vagrantfile` и уберите комментарии со строк `provision "shell"`.
 
-3.  **Запуск:**
+2.  **Запуск:**
 ```bash
 vagrant up --provision
 ```
