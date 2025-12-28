@@ -62,8 +62,3 @@ ansible --version
 molecule --version
 docker --version
 python --version
-
-echo ""
-echo "✅ DONE"
-echo "➡️  Log out and log in again for Docker group to apply"
-echo "➡️  Then run: source ~/ansible_venv_py310/bin/activate"
