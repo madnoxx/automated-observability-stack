@@ -73,10 +73,10 @@ ansible-playbook -i hosts.ini playbook.yml
 Откройте `Vagrantfile` и уберите комментарии со строк `provision "shell"`.
 
 3.  **Запуск:**
-    ```bash
-    vagrant up --provision
-    ```
-    *Vagrant автоматически выполнит скрипты `provision/*.sh` при создании машин.*
+```bash
+vagrant up --provision
+```
+*Vagrant автоматически выполнит скрипты `provision/*.sh` при создании машин.*
 
 ## Доступ к сервисам
 После успешного развертывания будут доступны следующие интерфейсы:
