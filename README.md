@@ -58,6 +58,7 @@ vagrant ssh ansible01
 ```
 
 3. Запуск автоматизации (Ansible)
+
 Внутри машины ansible01:
 ```bash
 cd /vagrant/monitoring-ansible
@@ -68,9 +69,10 @@ ansible-playbook -i hosts.ini playbook.yml
 Этот метод разворачивает базовую инфраструктуру с помощью простых bash-скриптов.
 
 1.  **Раскомментируйте скрипты в Vagrantfile:**
-    Откройте `Vagrantfile` и уберите комментарии со строк `provision "shell"`.
 
-2.  **Запуск:**
+Откройте `Vagrantfile` и уберите комментарии со строк `provision "shell"`.
+
+3.  **Запуск:**
     ```bash
     vagrant up --provision
     ```
