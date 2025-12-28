@@ -90,7 +90,7 @@ molecule test
 
 Тесты поднимают Docker-контейнер, разворачивают роль и проверяют доступность HTTP API сервисов.
 
-### Стек технологий
+## Стек технологий
 - IaC: Ansible (Roles, Jinja2 Templates), Vagrant.
 
 - Monitoring: Grafana, Prometheus (Alerting Rules), Loki, Tempo.
