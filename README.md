@@ -39,27 +39,44 @@
 
 ## Запуск проекта
 
+Этот проект поддерживает два режима развертывания: **Shell Scripts** и **Ansible**.
+
 Для запуска вам понадобятся **VirtualBox** и **Vagrant**.
 
-### 1. Поднятие инфраструктуры
+### Option A: Ansible
+Этот метод использует Ansible для полной настройки, включая алертинг, дашборды и корреляцию логов.
+
+1. Поднятие инфраструктуры
 ```bash
 vagrant up
 ```
 Vagrant создаст 4 виртуальные машины и настроит сеть.
 
-### 2. Подключение к управляющему узлу
+2. Подключение к управляющему узлу
 ```bash
 vagrant ssh ansible01
 ```
 
-### 3. Запуск автоматизации (Ansible)
+3. Запуск автоматизации (Ansible)
 Внутри машины ansible01:
 ```bash
 cd /vagrant/monitoring-ansible
 ansible-playbook -i hosts.ini playbook.yml
 ```
 
-### 4. Доступ к сервисам
+### Option B: Shell Scripts
+Этот метод разворачивает базовую инфраструктуру с помощью простых bash-скриптов.
+
+1.  **Раскомментируйте скрипты в Vagrantfile:**
+    Откройте `Vagrantfile` и уберите комментарии со строк `provision "shell"`.
+
+2.  **Запуск:**
+    ```bash
+    vagrant up --provision
+    ```
+    *Vagrant автоматически выполнит скрипты `provision/*.sh` при создании машин.*
+
+## Доступ к сервисам
 После успешного развертывания будут доступны следующие интерфейсы:
 
 | Сервис | URL | Credentials | Описание |
@@ -68,13 +85,13 @@ ansible-playbook -i hosts.ini playbook.yml
 | **Prometheus** | http://localhost:9090 | - | Web UI метрик |
 | **HotROD App** | http://localhost:8081 | - | Демо-приложение |
 
-#### Проверка работоспособности:
+### Проверка работоспособности:
 ```bash
 curl -s http://localhost:9090/-/healthy && echo "Prometheus OK"
 curl -s http://localhost:3000/api/health && echo "Grafana OK"
 ```
 
-### Тестирование (Molecule)
+## Тестирование (Molecule)
 
 Роль startup_mon01 покрыта автоматическими тестами.
 
