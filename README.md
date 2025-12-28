@@ -59,7 +59,7 @@ cd /vagrant/monitoring-ansible
 ansible-playbook -i hosts.ini playbook.yml
 ```
 
-## 4. Доступ к сервисам
+### 4. Доступ к сервисам
 После успешного развертывания будут доступны следующие интерфейсы:
 
 | Сервис | URL | Credentials | Описание |
@@ -70,12 +70,12 @@ ansible-playbook -i hosts.ini playbook.yml
 | **Loki API** | http://localhost:3100/ready | - | Проверка готовности |
 | **Tempo API** | http://localhost:3200/status | - | Проверка статуса |
 
-### Проверка работоспособности
+#### Проверка работоспособности
 ```bash
-curl -s http://localhost:3100/ready && echo "✓ Loki OK"
-curl -s http://localhost:3200/status && echo "✓ Tempo OK"
-curl -s http://localhost:9090/-/healthy && echo "✓ Prometheus OK"
-curl -s http://localhost:3000/api/health && echo "✓ Grafana OK"
+curl -s http://localhost:3100/ready && echo "Loki OK"
+curl -s http://localhost:3200/status && echo "Tempo OK"
+curl -s http://localhost:9090/-/healthy && echo "Prometheus OK"
+curl -s http://localhost:3000/api/health && echo "Grafana OK"
 ```
 
 ### Тестирование (Molecule)
