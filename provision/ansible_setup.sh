@@ -1,13 +1,69 @@
 #!/bin/bash
-echo ">>> Installing Ansible and Python dependencies..."
+set -e
 
 sudo apt update
-sudo apt install -y software-properties-common python3 python3-pip python3-venv git
+sudo apt install -y \
+  build-essential \
+  libssl-dev \
+  zlib1g-dev \
+  libbz2-dev \
+  libreadline-dev \
+  libsqlite3-dev \
+  libffi-dev \
+  libncursesw5-dev \
+  xz-utils \
+  tk-dev \
+  libxml2-dev \
+  libxmlsec1-dev \
+  liblzma-dev \
+  curl \
+  git \
+  ca-certificates \
+  software-properties-common
 
-sudo add-apt-repository --yes --update ppa:ansible/ansible
-sudo apt install -y ansible
+PYTHON_VERSION=3.10.14
 
-pip3 install --upgrade pip
-pip3 install docker
+cd /usr/src
+sudo curl -O https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz
+sudo tar xzf Python-${PYTHON_VERSION}.tgz
+cd Python-${PYTHON_VERSION}
 
-echo ">>> Ansible setup complete."
+sudo ./configure --enable-optimizations
+sudo make -j"$(nproc)"
+sudo make altinstall
+
+cd ~
+/usr/local/bin/python3.10 -m venv ansible_venv_py310
+
+source ~/ansible_venv_py310/bin/activate
+
+pip install --upgrade pip setuptools wheel
+
+pip install \
+  ansible==9.* \
+  ansible-core==2.16.* \
+  molecule==6.* \
+  molecule-docker==2.* \
+  docker \
+  pytest \
+  yamllint
+
+ansible-galaxy collection install \
+  community.docker \
+  ansible.posix
+
+if ! command -v docker >/dev/null 2>&1; then
+  curl -fsSL https://get.docker.com | sudo sh
+fi
+
+sudo usermod -aG docker $USER
+
+ansible --version
+molecule --version
+docker --version
+python --version
+
+echo ""
+echo "✅ DONE"
+echo "➡️  Log out and log in again for Docker group to apply"
+echo "➡️  Then run: source ~/ansible_venv_py310/bin/activate"
