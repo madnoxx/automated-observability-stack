@@ -19,7 +19,11 @@ sudo apt install -y \
   curl \
   git \
   ca-certificates \
-  software-properties-common
+  software-properties-common \
+  python3-venv \
+  docker.io
+
+sudo usermod -aG docker $USER
 
 PYTHON_VERSION=3.10.14
 
@@ -35,28 +39,22 @@ sudo make altinstall
 cd ~
 /usr/local/bin/python3.10 -m venv ansible_venv_py310
 
+sudo chown -R vagrant:vagrant /home/vagrant/ansible_venv_py310
+
 source ~/ansible_venv_py310/bin/activate
 
 pip install --upgrade pip setuptools wheel
 
-pip install \
-  ansible==9.* \
-  ansible-core==2.16.* \
-  molecule==6.* \
-  molecule-docker==2.* \
-  docker \
-  pytest \
-  yamllint
+pip install --upgrade \
+  ansible-core \
+  ansible \
+  molecule \
+  molecule-docker \
+  ansible-compat
 
 ansible-galaxy collection install \
   community.docker \
   ansible.posix
-
-if ! command -v docker >/dev/null 2>&1; then
-  curl -fsSL https://get.docker.com | sudo sh
-fi
-
-sudo usermod -aG docker $USER
 
 ansible --version
 molecule --version
