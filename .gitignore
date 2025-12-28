@@ -8,8 +8,9 @@ venv/
 vagrant_private_key
 vagrant_private_key_new
 *.pem
-id_rsa
+id_rsa*
 id_rsa_pub
+vagrant_private_key*
 __pycache__/
 *.pyc
 .cache/
