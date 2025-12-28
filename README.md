@@ -70,7 +70,7 @@ ansible-playbook -i hosts.ini playbook.yml
 | **Loki API** | http://localhost:3100/ready | - | Проверка готовности |
 | **Tempo API** | http://localhost:3200/status | - | Проверка статуса |
 
-#### Проверка работоспособности
+#### Проверка работоспособности:
 ```bash
 curl -s http://localhost:3100/ready && echo "Loki OK"
 curl -s http://localhost:3200/status && echo "Tempo OK"
