@@ -1,21 +1,35 @@
 apiVersion: 1
+
 datasources:
   - name: Tempo
     type: tempo
     uid: tempo-ds
     url: http://localhost:{{ tempo_port }}
     access: proxy
-    version: 1
+    isDefault: false
+    editable: true
+
     jsonData:
+      httpMethod: GET
+      
       tracesToLogs:
         datasourceUid: loki-ds
-        tags: ["trace_id", "span_id"]
         
-        filterByTraceID: true
-        filterBySpanID: true
+        mappedTags:
+          - key: 'traceID'
+            value: '__trace.traceId'
 
-        spanStartTimeShift: '-10s' 
-        spanEndTimeShift: '20s'
+        
+        filterByTraceID: false
+        filterBySpanID: false
 
-        spanTags:
-          - key: 'trace_id'
+        
+        spanStartTimeShift: '5m'
+        spanEndTimeShift: '5m'
+        
+        customQuery: true
+        query: |
+          {job="docker"}
+          | regexp ".*(?P<json>{.*})"
+          | json
+          | trace_id="${__trace.traceId}"

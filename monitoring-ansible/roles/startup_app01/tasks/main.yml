@@ -32,15 +32,8 @@
 - name: Install Grafana Alloy
   ansible.builtin.include_tasks: install_alloy.yml
 
-- name: Add 'alloy' user to 'docker' group
-  ansible.builtin.user:
-    name: alloy
-    groups: docker
-    append: yes
-
 - name: Prepare Docker log ACLs for Alloy
   block:
-
     - name: Allow alloy to traverse /var/lib/docker
       ansible.posix.acl:
         path: /var/lib/docker
@@ -49,7 +42,7 @@
         permissions: rx
         state: present
 
-    - name: Allow alloy to traverse container directories
+    - name: Allow alloy to traverse /var/lib/docker/containers
       ansible.posix.acl:
         path: /var/lib/docker/containers
         entity: alloy
@@ -57,10 +50,85 @@
         permissions: rx
         state: present
 
-    - name: Set default ACL so future container logs are readable by alloy
-      ansible.builtin.command: >
-        setfacl -m d:u:alloy:r /var/lib/docker/containers
+    - name: Find existing container directories
+      ansible.builtin.find:
+        paths: /var/lib/docker/containers
+        file_type: directory
+        recurse: no
+      register: container_dirs
+
+    - name: Set ACL on existing container directories
+      ansible.posix.acl:
+        path: "{{ item.path }}"
+        entity: alloy
+        etype: user
+        permissions: rx
+        state: present
+      loop: "{{ container_dirs.files }}"
+      when: container_dirs.files | length > 0
+
+    - name: Set ACL on existing container log files
+      ansible.builtin.shell: |
+        setfacl -R -m u:alloy:r /var/lib/docker/containers/*/*.log 2>/dev/null || true
+      args:
+        executable: /bin/bash
       changed_when: false
+
+    - name: Set default ACL for future container directories
+      ansible.builtin.command: >
+        setfacl -d -m u:alloy:rx /var/lib/docker/containers
+      changed_when: false
+
+    - name: Set default ACL for future container log files
+      ansible.builtin.command: >
+        setfacl -d -m u:alloy:r /var/lib/docker/containers
+      changed_when: false
+
+- name: Create ACL maintenance script
+  ansible.builtin.copy:
+    dest: /usr/local/bin/fix-docker-acl.sh
+    mode: '0755'
+    content: |
+      #!/bin/bash
+      setfacl -m u:alloy:rx /var/lib/docker/containers
+      setfacl -R -m u:alloy:rx /var/lib/docker/containers/*/ 2>/dev/null || true
+      setfacl -R -m u:alloy:r /var/lib/docker/containers/*/*.log 2>/dev/null || true
+      setfacl -d -m u:alloy:rx /var/lib/docker/containers
+      setfacl -d -m u:alloy:r /var/lib/docker/containers
+
+- name: Create systemd path unit for ACL monitoring
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/docker-acl-fix.path
+    content: |
+      [Unit]
+      Description=Monitor Docker containers directory for ACL maintenance
+
+      [Path]
+      PathModified=/var/lib/docker/containers
+      Unit=docker-acl-fix.service
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Create systemd service for ACL maintenance
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/docker-acl-fix.service
+    content: |
+      [Unit]
+      Description=Fix ACL for Docker container logs
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/bin/fix-docker-acl.sh
+      StandardOutput=journal
+      StandardError=journal
+
+- name: Enable ACL monitoring
+  ansible.builtin.systemd:
+    name: docker-acl-fix.path
+    state: started
+    enabled: yes
+    daemon_reload: yes
 
 - name: Remove default Nginx site link
   ansible.builtin.file:
