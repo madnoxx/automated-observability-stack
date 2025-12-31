@@ -32,6 +32,12 @@
 - name: Install Grafana Alloy
   ansible.builtin.include_tasks: install_alloy.yml
 
+- name: Add 'alloy' user to 'docker' group
+  ansible.builtin.user:
+    name: alloy
+    groups: docker
+    append: yes
+
 - name: Prepare Docker log ACLs for Alloy
   block:
     - name: Allow alloy to traverse /var/lib/docker

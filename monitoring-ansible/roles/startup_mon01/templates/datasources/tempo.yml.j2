@@ -9,27 +9,21 @@ datasources:
     isDefault: false
     editable: true
 
-    jsonData:
-      httpMethod: GET
-      
+    jsonData:      
       tracesToLogs:
         datasourceUid: loki-ds
-        
-        mappedTags:
-          - key: 'traceID'
-            value: '__trace.traceId'
 
-        
         filterByTraceID: false
         filterBySpanID: false
 
-        
-        spanStartTimeShift: '5m'
-        spanEndTimeShift: '5m'
-        
+        spanStartTimeShift: '-4h'
+        spanEndTimeShift: '4h'
+
         customQuery: true
-        query: |
-          {job="docker"}
-          | regexp ".*(?P<json>{.*})"
-          | json
-          | trace_id="${__trace.traceId}"
+        query: '{job="docker"} |= "$${__trace.traceId}"'
+
+      nodeGraph:
+        enabled: true
+
+      search:
+        hide: false

@@ -31,14 +31,28 @@ loki.source.file "system_collector" {
   forward_to = [loki.write.to_loki.receiver]
 }
 
-local.file_match "docker_logs" {
-  path_targets = [
-    {__path__ = "/var/lib/docker/containers/*/*-json.log", job = "docker"},
-  ]
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
 }
 
-loki.source.file "docker_collector" {
-  targets    = local.file_match.docker_logs.targets
+discovery.relabel "docker" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/?(.*)"
+    target_label  = "service_name"
+  }
+
+  rule {
+    target_label = "job"
+    replacement  = "docker"
+  }
+}
+
+loki.source.docker "docker" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.docker.output
   forward_to = [loki.write.to_loki.receiver]
 }
 

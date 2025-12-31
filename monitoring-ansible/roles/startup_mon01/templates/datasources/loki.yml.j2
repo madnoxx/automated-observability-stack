@@ -13,26 +13,8 @@ datasources:
       maxLines: 1000
       
       derivedFields:
-        - name: TraceID (JSON)
-          matcherRegex: '"traceID":\s*"([a-fA-F0-9]{16,32})"'
-          url: '$${__value.raw}'
-          datasourceUid: tempo-ds
-          urlDisplayLabel: 'View Trace'
-        
-        - name: TraceID (keyval)
-          matcherRegex: 'traceID[=:]([a-fA-F0-9]{16,32})'
-          url: '$${__value.raw}'
-          datasourceUid: tempo-ds
-          urlDisplayLabel: 'View Trace'
-        
-        - name: trace_id
-          matcherRegex: 'trace_id[=:]([a-fA-F0-9]{16,32})'
-          url: '$${__value.raw}'
-          datasourceUid: tempo-ds
-          urlDisplayLabel: 'View Trace'
-        
-        - name: TraceID (Jaeger)
-          matcherRegex: 'traceID[=:]([a-fA-F0-9]{16})'
+        - name: HotROD Trace
+          matcherRegex: '"trace_id":\s*"(\w+)"'
           url: '$${__value.raw}'
           datasourceUid: tempo-ds
           urlDisplayLabel: 'View Trace'
