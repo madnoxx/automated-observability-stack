@@ -6,28 +6,6 @@
 
 ## Архитектура
 
-```mermaid
-graph TD
-    subgraph "Application Server (app01)"
-        App[HotROD App] -->|Traces| Alloy
-        App -->|Logs to File| FileSys
-        FileSys -->|Read with ACL| Alloy
-        HostMetrics --> Alloy
-    end
-
-    subgraph "Monitoring Hub (mon01)"
-        Alloy -->|Push Logs| Loki
-        Alloy -->|Push Traces| Tempo
-        Grafana <--> Loki
-        Grafana <--> Tempo
-        Grafana <--> Prometheus
-    end
-
-    subgraph "Metrics Storage (prom01)"
-        Alloy -->|Remote Write| Prometheus
-    end
-```
-
 Инфраструктура состоит из 4-х виртуальных машин, связанных приватной сетью:
 
 | Хост | Роль | Компоненты | Описание |
@@ -40,24 +18,25 @@ graph TD
 ## Ключевые особенности и решения
 
 ### 1. Безопасность и ACL
-Вместо запуска агента сбора логов от `root` или отключения AppArmor, реализовано гранулярное управление правами через **ACL (Access Control Lists)**.
+Вместо запуска агента сбора логов от `root` или отключения AppArmor, применена настройка **ACL (Access Control Lists)**.
 *   Пользователю `alloy` выданы права `rx` на директории Docker и `r` на файлы JSON-логов.
 *   Это позволяет собирать логи контейнеров без нарушения контура безопасности.
 
 ### 2. Универсальные Ansible Роли
 Роль `startup_mon01` написана с использованием **гибридной логики**:
 *   На реальных VM (Vagrant) она использует **Systemd** для управления сервисами.
-*   В тестовой среде (Molecule/Docker) она автоматически переключается на **эмуляцию процессов**, так как в контейнерах отсутствует PID 1.
+*   В тестовой среде (Molecule/Docker) она автоматически переключается на **эмуляцию процессов** (nohup), так как в контейнерах отсутствует PID 1.
+*   Это позволило покрыть инфраструктурный код автотестами Molecule.
 
 ### 3. Полная корреляция сигналов
 Автоматически настроена связность данных в Grafana через Provisioning:
-*   **Logs → Traces:** Логи Loki парсятся на лету, ID трассировки превращаются в ссылки на Tempo.
-*   **Traces → Logs:** В Tempo настроен поиск логов по Trace ID с учетом **Time Shift** (компенсация задержки буферизации).
+*   **Logs → Traces:** В логах (Loki) автоматически находятся TraceID, превращаясь в ссылки на Tempo.
+*   **Traces → Logs:** В трейсах (Tempo) работает кнопка Logs, которая открывает логи конкретного запроса с учетом компенсации временных задержек (Time Shift).
 
 ### 4. Обход ограничений среды
 Решены проблемы совместимости **Windows/Hyper-V/VirtualBox**:
-*   Использован паттерн "Bastion Host" (ansible01) для запуска автоматизации внутри Linux-контура.
-*   Настроена уникальная схема проброса портов SSH для избежания конфликтов.
+*   Vagrant поднимает специальную ноду ansible01.
+*   Весь деплой происходит внутри изолированного Linux-контура, исключая проблемы с путями, правами и SSH-ключами Windows.
 
 ## Запуск проекта
 
@@ -146,9 +125,17 @@ molecule test
 Тесты поднимают Docker-контейнер, разворачивают роль и проверяют доступность HTTP API сервисов.
 
 ## Стек технологий
-- IaC: Ansible (Roles, Jinja2 Templates), Vagrant.
+- IaC: Ansible (Roles, Jinja2 Templates).
 
-- Monitoring: Grafana, Prometheus (Alerting Rules), Loki, Tempo.
+- Virtualization: Vagrant.
+
+- Visualization: Grafana (Provisioning).
+
+- Logs: Loki (Docker and Systemd logs).
+
+- Traces: Tempo.
+
+- Metrics: Prometheus (Remote Write Receiver, Alerting Rules).
 
 - Agent: Grafana Alloy (OpenTelemetry Collector).
 
