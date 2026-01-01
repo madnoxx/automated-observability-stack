@@ -2,9 +2,31 @@
 
 Полностью автоматизированное развертывание стека наблюдаемости (Observability) на базе **Grafana, Loki, Tempo, Prometheus** с использованием **Vagrant** и **Ansible**.
 
-Проект демонстрирует подход **Infrastructure as Code (IaC)** для мониторинга микросервисного приложения (HotROD), включая сбор метрик, логов и распределенных трассировок с полной корреляцией данных.
+Проект демонстрирует подход **Infrastructure as Code (IaC)** для полного цикла мониторинга микросервисного приложения (HotROD), включая сбор метрик, логов и распределенных трассировок с полной корреляцией данных.
 
 ## Архитектура
+
+```mermaid
+graph TD
+    subgraph "Application Server (app01)"
+        App[HotROD App] -->|Traces| Alloy
+        App -->|Logs to File| FileSys
+        FileSys -->|Read with ACL| Alloy
+        HostMetrics --> Alloy
+    end
+
+    subgraph "Monitoring Hub (mon01)"
+        Alloy -->|Push Logs| Loki
+        Alloy -->|Push Traces| Tempo
+        Grafana <--> Loki
+        Grafana <--> Tempo
+        Grafana <--> Prometheus
+    end
+
+    subgraph "Metrics Storage (prom01)"
+        Alloy -->|Remote Write| Prometheus
+    end
+```
 
 Инфраструктура состоит из 4-х виртуальных машин, связанных приватной сетью:
 
