@@ -52,12 +52,30 @@ vagrant up
 ```
 Vagrant создаст 4 виртуальные машины и настроит сеть.
 
-2. Подключение к управляющему узлу
-```bash
-vagrant ssh ansible01
+
+2. Подготовка SSH ключей (Windows)
+
+Так как Vagrant генерирует новые ключи при каждом создании машин, их необходимо передать на управляющий узел. Выполните эти команды в PowerShell из корня проекта:
+
+```
+copy .vagrant\machines\mon01\virtualbox\private_key monitoring-ansible\id_rsa_mon01
+copy .vagrant\machines\prom01\virtualbox\private_key monitoring-ansible\id_rsa_prom01
+copy .vagrant\machines\app01\virtualbox\private_key monitoring-ansible\id_rsa_app01
 ```
 
-3. Запуск автоматизации (Ansible)
+3. Настройка окружения на управляющем узле
+
+Зайдите на машину ansible01 и обновите ключи (это необходимо для доступа Ansible к другим хостам):
+
+```bash
+vagrant ssh ansible01
+
+# Внутри ansible01 выполняем:
+cp /vagrant/monitoring-ansible/id_rsa_* ~/.ssh/
+chmod 600 ~/.ssh/id_rsa_*
+```
+
+4. Запуск автоматизации (Ansible)
 
 Внутри машины ansible01:
 ```bash

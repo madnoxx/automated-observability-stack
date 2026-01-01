@@ -10,8 +10,10 @@ datasources:
     editable: true
 
     jsonData:      
-      tracesToLogs:
+      tracesToLogsV2:
         datasourceUid: loki-ds
+
+        tags: ['service.name']
 
         filterByTraceID: false
         filterBySpanID: false
