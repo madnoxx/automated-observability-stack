@@ -34,7 +34,7 @@ jobs:
           ansible-galaxy collection install community.docker ansible.posix
 
       - name: Run Molecule tests
-        working-directory: roles/${{ matrix.role }}
+        working-directory: monitoring-ansible/roles/${{ matrix.role }}
         run: molecule test
         env:
           ANSIBLE_FORCE_COLOR: '1'
