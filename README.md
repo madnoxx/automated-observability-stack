@@ -1,5 +1,7 @@
 # Automated Observability Stack
 
+![CI Status](https://github.com/madnoxx/automated-observability-stack/actions/workflows/ci.yml/badge.svg)
+
 Полностью автоматизированное развертывание стека наблюдаемости (Observability) на базе **Grafana, Loki, Tempo, Prometheus** с использованием **Vagrant** и **Ansible**.
 
 Проект демонстрирует подход **Infrastructure as Code (IaC)** для полного цикла мониторинга микросервисного приложения (HotROD), включая сбор метрик, логов и распределенных трассировок с полной корреляцией данных.
@@ -112,17 +114,30 @@ curl -s http://localhost:9090/-/healthy && echo "Prometheus OK"
 curl -s http://localhost:3000/api/health && echo "Grafana OK"
 ```
 
-## Тестирование (Molecule)
+## Тестирование и CI/CD
 
-Роль startup_mon01 покрыта автоматическими тестами.
+### Ручное тестирование (Molecule)
 
-Внутри ansible01:
+Роль startup_mon01 покрыта автоматическими тестами, которые проверяют корректность установки и запуска сервисов.
+
+Запуск тестов внутри ansible01:
 ```bash
 cd /vagrant/monitoring-ansible/roles/startup_mon01
 molecule test
 ```
 
 Тесты поднимают Docker-контейнер, разворачивают роль и проверяют доступность HTTP API сервисов.
+
+## CI Pipeline (GitHub Actions)
+
+Проект использует GitHub Actions для непрерывной интеграции.
+При каждом пуше в репозиторий запускается автоматизированный пайплайн, который:
+
+1. Разворачивает чистое тестовое окружение (Ubuntu Latest + Docker).
+2. Запускает Molecule тесты для роли startup_mon01.
+3. Проверяет идемпотентность и доступность сервисов (Loki, Tempo, Grafana).
+
+Статус последнего билда можно увидеть по бейджу в заголовке README.
 
 ## Стек технологий
 - IaC: Ansible (Roles, Jinja2 Templates).
@@ -136,9 +151,9 @@ molecule test
 - Traces: Tempo.
 
 - Metrics: Prometheus (Remote Write Receiver, Alerting Rules).
-
+- 
 - Agent: Grafana Alloy (OpenTelemetry Collector).
 
 - App: Jaeger HotROD (Go microservices).
 
-- Testing: Molecule, Docker.
+- Testing: Molecule, Docker, GitHub Actions.
