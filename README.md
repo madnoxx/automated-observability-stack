@@ -149,7 +149,7 @@ molecule test
 - Traces: Tempo.
 
 - Metrics: Prometheus (Remote Write Receiver, Alerting Rules).
-- 
+
 - Agent: Grafana Alloy (OpenTelemetry Collector).
 
 - App: Jaeger HotROD (Go microservices).
