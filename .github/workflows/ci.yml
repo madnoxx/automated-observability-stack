@@ -38,3 +38,4 @@ jobs:
         run: molecule test
         env:
           ANSIBLE_FORCE_COLOR: '1'
+          ANSIBLE_ROLES_PATH: ${{ github.workspace }}/monitoring-ansible/roles
