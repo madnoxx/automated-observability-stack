@@ -126,16 +126,14 @@ cd /vagrant/monitoring-ansible/roles/startup_mon01
 molecule test
 ```
 
-Тесты поднимают Docker-контейнер, разворачивают роль и проверяют доступность HTTP API сервисов.
-
-## CI Pipeline (GitHub Actions)
+### CI Pipeline (GitHub Actions)
 
 Проект использует GitHub Actions для непрерывной интеграции.
 При каждом пуше в репозиторий запускается автоматизированный пайплайн, который:
 
 1. Разворачивает чистое тестовое окружение (Ubuntu Latest + Docker).
 2. Запускает Molecule тесты для роли startup_mon01.
-3. Проверяет идемпотентность и доступность сервисов (Loki, Tempo, Grafana).
+3. Проверяет идемпотентность и доступность HTTP API сервисов (Loki, Tempo, Grafana).
 
 Статус последнего билда можно увидеть по бейджу в заголовке README.
 
