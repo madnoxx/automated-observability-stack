@@ -19,6 +19,9 @@ platforms:
 
 provisioner:
   name: ansible
+  config_options:
+    default:
+      roles_path: ../../../
 
 verifier:
   name: ansible
